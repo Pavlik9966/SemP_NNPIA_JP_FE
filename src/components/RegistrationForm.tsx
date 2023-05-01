@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import {Button, Form} from 'react-bootstrap';
+import {Button, Container, Form} from 'react-bootstrap';
 import axios from "axios";
 
 interface RegistrationFormProps {
@@ -36,48 +36,50 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({onRegister, onCancel
     };
 
     return (
-        <div className="card mt-5" style={{width: '50%'}}>
-            <div className="card-header">
-                <h3 className="card-title">Register</h3>
+        <Container className="d-flex justify-content-center">
+            <div className="card mt-5" style={{width: '50%'}}>
+                <div className="card-header">
+                    <h3 className="card-title">Register</h3>
+                </div>
+                <div className="card-body">
+                    <Form onSubmit={handleSubmit}>
+                        <Form.Group className="mb-3" controlId="username">
+                            <Form.Label className="ms-2">Username</Form.Label>
+                            <Form.Control
+                                type="text"
+                                placeholder="Enter username"
+                                value={username}
+                                onChange={(event) => setUsername(event.target.value)}
+                            />
+                        </Form.Group>
+                        <Form.Group className="mb-3" controlId="password">
+                            <Form.Label className="ms-2">Password</Form.Label>
+                            <Form.Control
+                                type="password"
+                                placeholder="Password"
+                                value={password}
+                                onChange={(event) => setPassword(event.target.value)}
+                            />
+                        </Form.Group>
+                        <Form.Group className="mb-3" controlId="confirmPassword">
+                            <Form.Label className="ms-2">Confirm Password</Form.Label>
+                            <Form.Control
+                                type="password"
+                                placeholder="Confirm Password"
+                                value={confirmPassword}
+                                onChange={(event) => setConfirmPassword(event.target.value)}
+                            />
+                        </Form.Group>
+                        {error && <div className="alert alert-danger">{error}</div>}
+                        <div className="text-center">
+                            <Button className="me-2" variant="primary" type="submit" style={{width: '25%'}}
+                                    disabled={isLoading}>{isLoading ? 'Loading...' : 'Register'}</Button>
+                            <Button variant="warning" style={{width: '25%'}} onClick={onCancel}>Cancel</Button>
+                        </div>
+                    </Form>
+                </div>
             </div>
-            <div className="card-body">
-                <Form onSubmit={handleSubmit}>
-                    <Form.Group className="mb-3" controlId="username">
-                        <Form.Label className="ms-2">Username</Form.Label>
-                        <Form.Control
-                            type="text"
-                            placeholder="Enter username"
-                            value={username}
-                            onChange={(event) => setUsername(event.target.value)}
-                        />
-                    </Form.Group>
-                    <Form.Group className="mb-3" controlId="password">
-                        <Form.Label className="ms-2">Password</Form.Label>
-                        <Form.Control
-                            type="password"
-                            placeholder="Password"
-                            value={password}
-                            onChange={(event) => setPassword(event.target.value)}
-                        />
-                    </Form.Group>
-                    <Form.Group className="mb-3" controlId="confirmPassword">
-                        <Form.Label className="ms-2">Confirm Password</Form.Label>
-                        <Form.Control
-                            type="password"
-                            placeholder="Confirm Password"
-                            value={confirmPassword}
-                            onChange={(event) => setConfirmPassword(event.target.value)}
-                        />
-                    </Form.Group>
-                    {error && <div className="alert alert-danger">{error}</div>}
-                    <div className="text-center">
-                        <Button className="me-2" variant="primary" type="submit" style={{width: '25%'}}
-                                disabled={isLoading}>{isLoading ? 'Loading...' : 'Register'}</Button>
-                        <Button variant="warning" style={{width: '25%'}} onClick={onCancel}>Cancel</Button>
-                    </div>
-                </Form>
-            </div>
-        </div>
+        </Container>
     );
 };
 
