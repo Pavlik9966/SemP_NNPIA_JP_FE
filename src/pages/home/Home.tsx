@@ -1,7 +1,7 @@
 import React from 'react';
 import {Container, Table} from "react-bootstrap";
 
-const HomePage = () => {
+const Home = () => {
     return (
         <div>
             <Container className="mt-3">
@@ -39,4 +39,4 @@ const HomePage = () => {
     );
 };
 
-export default HomePage;
+export default Home;
