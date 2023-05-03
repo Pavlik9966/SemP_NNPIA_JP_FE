@@ -1,39 +1,46 @@
-import React from 'react'
-import './App.css'
-import {Container, Nav, Navbar, NavDropdown} from "react-bootstrap";
+import {BrowserRouter, Navigate, Route, Routes} from 'react-router-dom';
+import React, {useState} from 'react';
+import Login from './pages/login/Login';
+import Registration from './pages/registration/Registration';
+import Home from './pages/home/Home';
+import Navigation from "./components/Navigation";
+import {Provider} from "react-redux";
+import {store} from "./features/store";
 
-function App() {
+const App = () => {
+    const isLoggedIn = false
+    const [token, setToken] = useState('');
+    const [showRegistration, setShowRegistration] = useState(false);
+    const handleLogin = (username: string, newToken: string) => setToken(newToken);
+    const handleHideRegistration = () => setShowRegistration(false);
+
     return (
-        <Navbar collapseOnSelect expand="lg" bg="dark" variant="dark">
-            <Container>
-                <Navbar.Brand href="#home">React-Bootstrap</Navbar.Brand>
-                <Navbar.Toggle aria-controls="responsive-navbar-nav"/>
-                <Navbar.Collapse id="responsive-navbar-nav">
-                    <Nav className="me-auto">
-                        <Nav.Link href="#features">Features</Nav.Link>
-                        <Nav.Link href="#pricing">Pricing</Nav.Link>
-                        <NavDropdown title="Dropdown" id="collasible-nav-dropdown">
-                            <NavDropdown.Item href="#action/3.1">Action</NavDropdown.Item>
-                            <NavDropdown.Item href="#action/3.2">
-                                Another action
-                            </NavDropdown.Item>
-                            <NavDropdown.Item href="#action/3.3">Something</NavDropdown.Item>
-                            <NavDropdown.Divider/>
-                            <NavDropdown.Item href="#action/3.4">
-                                Separated link
-                            </NavDropdown.Item>
-                        </NavDropdown>
-                    </Nav>
-                    <Nav>
-                        <Nav.Link href="#deets">More deets</Nav.Link>
-                        <Nav.Link eventKey={2} href="#memes">
-                            Dank memes
-                        </Nav.Link>
-                    </Nav>
-                </Navbar.Collapse>
-            </Container>
-        </Navbar>
+        <Provider store={store}>
+            <BrowserRouter>
+                <Navigation/>
+                <Routes>
+                    <Route
+                        path={"/login"}
+                        element={isLoggedIn ?
+                            <Navigate to={"/"}/> :
+                            <Login onLogin={handleLogin} onShowRegistration={handleHideRegistration}/>}
+                    />
+                    <Route
+                        path={"/register"}
+                        element={isLoggedIn ?
+                            <Navigate to={"/"}/> :
+                            <Registration onRegister={handleLogin} onCancel={handleHideRegistration}/>}
+                    />
+                    <Route
+                        path={"/"}
+                        element={isLoggedIn ?
+                            <Home/> :
+                            <Navigate to={"/login"}/>}
+                    />
+                </Routes>
+            </BrowserRouter>
+        </Provider>
     );
-}
+};
 
 export default App;
