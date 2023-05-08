@@ -1,29 +1,64 @@
-import React, {useState} from 'react';
-import {Button, Container, Form} from 'react-bootstrap';
 import axios from 'axios';
+import {Button, Container, Form, Spinner} from 'react-bootstrap';
+import React, {useState} from 'react';
+import {useNavigate} from "react-router-dom";
+import {User} from "../../data/api/types";
 
 interface LoginFormProps {
-    onLogin: (username: string, token: string) => void;
-    onShowRegistration: () => void;
+    setIsAuthenticated: (isAuthenticated: boolean) => void;
 }
 
-const Login: React.FC<LoginFormProps> = ({onLogin, onShowRegistration}) => {
+const Login: React.FC<LoginFormProps> = ({setIsAuthenticated}) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const navigate = useNavigate();
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        setIsLoading(true);
         setError('');
+        setIsLoading(true);
+
         try {
-            const response = await axios.post('/api/v1/auth/login', {username, password});
-            onLogin(username, response.data.token);
+            const API_URL = import.meta.env.BASE_URL;
+
+            const response = await axios.post(`http://localhost:9000/api/v1/auth/login`, {
+                username: username,
+                password: password,
+            });
+
+            const token = response.data.token;
+            localStorage.setItem('expiration', (new Date().getTime() + 10 * 60 * 1000).toString());
+            localStorage.setItem('token', token);
+
+            setIsAuthenticated(true);
         } catch (error: any) {
+            console.error('Error logging in: ', error.message);
             setError(error.message);
+        } finally {
+            setIsLoading(false);
         }
-        setIsLoading(false);
+
+        try {
+            const API_URL = import.meta.env.BASE_URL;
+            const token = localStorage.getItem('token');
+
+            const response = await axios.get(`${API_URL}/user`, {
+                headers: {'Authorization': `Bearer ${token}`},
+                params: {username: username},
+            });
+
+            const user: User = response.data;
+            localStorage.setItem('user', JSON.stringify(user));
+
+            navigate('/');
+        } catch (error: any) {
+            console.error('Error fetching user: ', error.message);
+            setError(error.message);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -52,17 +87,19 @@ const Login: React.FC<LoginFormProps> = ({onLogin, onShowRegistration}) => {
                                 onChange={(event) => setPassword(event.target.value)}
                             />
                         </Form.Group>
-                        {error && <div className="alert alert-danger">{error}</div>}
                         <div className="text-center">
                             <Button variant="primary" type="submit" className="" style={{width: '25%'}}
-                                    disabled={isLoading}>{isLoading ? 'Loading...' : 'Login'}</Button>
+                                    disabled={isLoading}>
+                                {isLoading ? <Spinner animation="border" size="sm"/> : 'Log In'}
+                            </Button>
                         </div>
-                        <div className="mt-2 text-center">
+                        {/*<div className="mt-2 text-center">
                             Don't have an account?{' -> '}
                             <Button className="text-nowrap" variant="warning" style={{
                                 width: '25%', textOverflow: 'ellipsis', overflow: 'hidden'
                             }} onClick={onShowRegistration}>Register here</Button>
-                        </div>
+                        </div>*/}
+                        {error && <div className="alert alert-danger">{error}</div>}
                     </Form>
                 </div>
             </div>
