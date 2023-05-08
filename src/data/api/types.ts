@@ -4,7 +4,7 @@ export interface User {
     password: string;
     name: string;
     surname: string;
-    dateOfBirth: string; // Note: use string or number depending on how you serialize date in your application.
+    dateOfBirth: Date; // Note: use string or number depending on how you serialize date in your application.
     phone: string;
     email: string;
     address: Address;
@@ -30,4 +30,15 @@ export interface Role {
     id: number;
     name: string;
     users: User[];
+}
+
+export interface Account {
+    id: number;
+    user: User;
+    accountNumber: string;
+    balance: number;
+    createdAt: Date;
+}
+
+export interface Transaction {
 }

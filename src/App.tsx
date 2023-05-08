@@ -1,42 +1,64 @@
 import {BrowserRouter, Navigate, Route, Routes} from 'react-router-dom';
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import Login from './pages/login/Login';
-import Registration from './pages/registration/Registration';
 import Home from './pages/home/Home';
 import Navigation from "./components/Navigation";
 import {Provider} from "react-redux";
 import {store} from "./features/store";
 
 const App = () => {
-    const isLoggedIn = false
-    const [token, setToken] = useState('');
-    const [showRegistration, setShowRegistration] = useState(false);
-    const handleLogin = (username: string, newToken: string) => setToken(newToken);
-    const handleHideRegistration = () => setShowRegistration(false);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+    useEffect(() => {
+        const expiration = localStorage.getItem('expiration');
+        const token = localStorage.getItem('token');
+
+        if (token && expiration) {
+            const currentTime = new Date().getTime();
+            const expirationTime = parseInt(expiration);
+
+            if (currentTime < expirationTime) {
+                setIsAuthenticated(true);
+
+                setTimeout(() => {
+                    setIsAuthenticated(false);
+
+                    localStorage.removeItem('expiration');
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                }, expirationTime - currentTime);
+            } else {
+                localStorage.removeItem('expiration');
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+            }
+        }
+    }, []);
 
     return (
         <Provider store={store}>
             <BrowserRouter>
-                <Navigation/>
+                <Navigation setIsAuthenticated={setIsAuthenticated}/>
                 <Routes>
                     <Route
-                        path={"/login"}
-                        element={isLoggedIn ?
-                            <Navigate to={"/"}/> :
-                            <Login onLogin={handleLogin} onShowRegistration={handleHideRegistration}/>}
-                    />
-                    <Route
-                        path={"/register"}
-                        element={isLoggedIn ?
-                            <Navigate to={"/"}/> :
-                            <Registration onRegister={handleLogin} onCancel={handleHideRegistration}/>}
-                    />
-                    <Route
                         path={"/"}
-                        element={isLoggedIn ?
-                            <Home/> :
-                            <Navigate to={"/login"}/>}
+                        element={isAuthenticated ?
+                            (<Home user={JSON.parse(localStorage.getItem('user')!!)}/>) :
+                            (<Navigate to="/login" replace/>)}
                     />
+                    <Route
+                        path={"/login"}
+                        element={isAuthenticated ? (<Navigate to="/" replace/>) : (
+                            <Login setIsAuthenticated={setIsAuthenticated}/>)}
+                    />
+                    <Route
+                        path={"*"}
+                        element={<Navigate to="/" replace/>}
+                    />
+                    {/*<Route
+                        path={"/register"}
+                        element={<Registration/>}
+                    />*/}
                 </Routes>
             </BrowserRouter>
         </Provider>
