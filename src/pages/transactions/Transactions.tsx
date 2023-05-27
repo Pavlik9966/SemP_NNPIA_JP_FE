@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {NewTransaction, Transaction} from "../../data/api/types";
+import {NewTransaction, Transaction, User} from "../../data/api/types";
 import axios from "axios";
 import {Alert, Card, Col, Container, FormControl, InputGroup, Row, Table} from "react-bootstrap";
 import {useParams} from "react-router";
@@ -14,6 +14,8 @@ const Transactions: React.FC<TransactionsProps> = ({}) => {
     const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
     const [searchTerm, setSearchTerm] = useState("");
     const {selected} = useParams();
+    const [sortColumn, setSortColumn] = useState<string>("");
+    const [sortOrder, setSortOrder] = useState<string>("");
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(true);
@@ -53,8 +55,53 @@ const Transactions: React.FC<TransactionsProps> = ({}) => {
         const filtered = transactions.filter((transaction) =>
             transaction.description.toLowerCase().includes(searchTerm.toLowerCase())
         );
+
         setFilteredTransactions(filtered);
-    }, [searchTerm, transactions]);
+
+        if (sortColumn && sortOrder) {
+            const sortedTransactions = [...filtered].sort((a, b) => {
+                if (sortOrder === "asc") {
+                    if (sortColumn === "user.name") {
+                        return a.user.name < b.user.name ? -1 : 1;
+                    } else if (sortColumn === "accountNumberSender") {
+                        return a.accountNumberSender < b.accountNumberSender ? -1 : 1;
+                    } else if (sortColumn === "accountNumberRecipient") {
+                        return a.accountNumberRecipient < b.accountNumberRecipient ? -1 : 1;
+                    } else if (sortColumn === "transactionDate") {
+                        return a.transactionDate < b.transactionDate ? -1 : 1;
+                    } else if (sortColumn === "description") {
+                        return a.description < b.description ? -1 : 1;
+                    } else if (sortColumn === "amount") {
+                        return a.amount < b.amount ? -1 : 1;
+                    } else if (sortColumn === "createdAt") {
+                        return a.createdAt < b.createdAt ? -1 : 1;
+                    } else {
+                        throw new Error(`Invalid sortColumn value: ${sortColumn}.`);
+                    }
+                } else {
+                    if (sortColumn === "user.name") {
+                        return a.user.name > b.user.name ? -1 : 1;
+                    } else if (sortColumn === "accountNumberSender") {
+                        return a.accountNumberSender > b.accountNumberSender ? -1 : 1;
+                    } else if (sortColumn === "accountNumberRecipient") {
+                        return a.accountNumberRecipient > b.accountNumberRecipient ? -1 : 1;
+                    } else if (sortColumn === "transactionDate") {
+                        return a.transactionDate > b.transactionDate ? -1 : 1;
+                    } else if (sortColumn === "description") {
+                        return a.description > b.description ? -1 : 1;
+                    } else if (sortColumn === "amount") {
+                        return a.amount > b.amount ? -1 : 1;
+                    } else if (sortColumn === "createdAt") {
+                        return a.createdAt > b.createdAt ? -1 : 1;
+                    } else {
+                        throw new Error(`Invalid sortColumn value: ${sortColumn}.`);
+                    }
+                }
+            });
+
+            setFilteredTransactions(sortedTransactions);
+        }
+    }, [searchTerm, sortColumn, sortOrder, transactions]);
 
     const indexOfLastTransaction = currentPage * transactionsPerPage;
     const indexOfFirstTransaction = indexOfLastTransaction - transactionsPerPage;
@@ -67,11 +114,13 @@ const Transactions: React.FC<TransactionsProps> = ({}) => {
     const handleCreateTransaction = async (transactionData: NewTransaction) => {
         console.log("Creating transaction: ", transactionData);
 
-        transactionData.senderId = 1;
-        transactionData.accountIdSender = parseInt(selected!!);
-        transactionData.createdAt = new Date();
-
         try {
+            const user: User = JSON.parse(localStorage.getItem('user')!!);
+
+            transactionData.senderId = user.id;
+            transactionData.accountIdSender = parseInt(selected!!);
+            transactionData.createdAt = new Date(new Date().toLocaleString());
+
             const token = localStorage.getItem('token');
 
             const response = await axios.post(`${API_URL}` + "/account/transaction/create", transactionData, {
@@ -94,6 +143,23 @@ const Transactions: React.FC<TransactionsProps> = ({}) => {
         setSearchTerm(event.target.value);
     };
 
+    const handleSort = (columnName: string) => {
+        if (sortColumn === columnName) {
+            setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+        } else {
+            setSortColumn(columnName);
+            setSortOrder("asc");
+        }
+    };
+
+    const renderSortIcon = () => {
+        if (sortOrder === "asc") {
+            return <span>&#9650;</span>;
+        } else {
+            return <span>&#9660;</span>;
+        }
+    };
+
     return (
         <div>
             <Container className="mt-3">
@@ -112,16 +178,37 @@ const Transactions: React.FC<TransactionsProps> = ({}) => {
                                     </InputGroup>
                                 </Col>
                             </Row>
-                            <Table striped bordered hover>
+                            <Table striped bordered hover className="fixed-table ellipses">
                                 <thead>
                                 <tr>
-                                    <th>Sender</th>
-                                    <th>Bank Account Sender</th>
-                                    <th>Bank Account Recipient</th>
-                                    <th>Transaction Date</th>
-                                    <th>Description</th>
-                                    <th>Amount</th>
-                                    <th>Creation Date</th>
+                                    <th onClick={() => handleSort("user.name")}>
+                                        Sender
+                                        {sortColumn === "user.name" && renderSortIcon()}
+                                    </th>
+                                    <th onClick={() => handleSort("accountNumberSender")}>
+                                        Bank Account Sender
+                                        {sortColumn === "accountNumberSender" && renderSortIcon()}
+                                    </th>
+                                    <th onClick={() => handleSort("accountNumberRecipient")}>
+                                        Bank Account Recipient
+                                        {sortColumn === "accountNumberRecipient" && renderSortIcon()}
+                                    </th>
+                                    <th onClick={() => handleSort("transactionDate")}>
+                                        Transaction Date
+                                        {sortColumn === "transactionDate" && renderSortIcon()}
+                                    </th>
+                                    <th onClick={() => handleSort("description")}>
+                                        Description
+                                        {sortColumn === "description" && renderSortIcon()}
+                                    </th>
+                                    <th onClick={() => handleSort("amount")}>
+                                        Amount
+                                        {sortColumn === "amount" && renderSortIcon()}
+                                    </th>
+                                    <th onClick={() => handleSort("createdAt")}>
+                                        Creation Date
+                                        {sortColumn === "createdAt" && renderSortIcon()}
+                                    </th>
                                 </tr>
                                 </thead>
                                 <tbody>
