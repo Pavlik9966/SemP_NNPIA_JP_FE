@@ -1,18 +1,19 @@
 import React, {useState} from 'react';
-import {Button, Container, Form} from 'react-bootstrap';
-import axios from "axios";
+import {Alert, Button, Container, Form, Spinner} from 'react-bootstrap';
+import {useNavigate} from "react-router-dom";
 
 interface RegistrationFormProps {
-    onRegister: (username: string, token: string) => void;
-    onCancel: () => void;
 }
 
-const Registration: React.FC<RegistrationFormProps> = ({onRegister, onCancel,}) => {
+const Registration: React.FC<RegistrationFormProps> = ({}) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
+    const API_URL = 'http://localhost:9000/api/v1';
     const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const navigate = useNavigate();
+    const [show, setShow] = useState(true);
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -22,18 +23,19 @@ const Registration: React.FC<RegistrationFormProps> = ({onRegister, onCancel,}) 
         }
         setIsLoading(true);
         setError('');
+
         try {
-            const response = await axios.post('/api/v1/auth/register', {
-                username,
-                password,
-                creationDate: new Date().toISOString()
-            });
-            onRegister(username, response.data.token);
         } catch (error: any) {
-            setError(error.message);
+            console.error('Error registration: ', error.message);
+            setShow(true);
+            setError('Error registration: ' + `${error.message}`);
+        } finally {
+            setIsLoading(false);
         }
-        setIsLoading(false);
     };
+
+    function onCancel() {
+    }
 
     return (
         <Container className="d-flex justify-content-center">
@@ -70,12 +72,18 @@ const Registration: React.FC<RegistrationFormProps> = ({onRegister, onCancel,}) 
                                 onChange={(event) => setConfirmPassword(event.target.value)}
                             />
                         </Form.Group>
-                        {error && <div className="alert alert-danger">{error}</div>}
                         <div className="text-center">
                             <Button className="me-2" variant="primary" type="submit" style={{width: '25%'}}
-                                    disabled={isLoading}>{isLoading ? 'Loading...' : 'Register'}</Button>
+                                    disabled={isLoading}>
+                                {isLoading ? <Spinner animation="border" size="sm"/> : 'Register'}
+                            </Button>
                             <Button variant="warning" style={{width: '25%'}} onClick={onCancel}>Cancel</Button>
                         </div>
+                        {error && show &&
+                            <Alert variant="danger" className="mb-0 mt-3 pb-0" onClose={() => setShow(false)}
+                                   dismissible>
+                                <p>{error}</p>
+                            </Alert>}
                     </Form>
                 </div>
             </div>

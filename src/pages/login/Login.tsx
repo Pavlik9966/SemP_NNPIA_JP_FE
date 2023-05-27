@@ -1,5 +1,5 @@
 import axios from 'axios';
-import {Button, Container, Form, Spinner} from 'react-bootstrap';
+import {Alert, Button, Container, Form, Spinner} from 'react-bootstrap';
 import React, {useState} from 'react';
 import {useNavigate} from "react-router-dom";
 import {User} from "../../data/api/types";
@@ -11,9 +11,11 @@ interface LoginFormProps {
 const Login: React.FC<LoginFormProps> = ({setIsAuthenticated}) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const API_URL = 'http://localhost:9000/api/v1';
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
+    const [show, setShow] = useState(true);
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -21,9 +23,7 @@ const Login: React.FC<LoginFormProps> = ({setIsAuthenticated}) => {
         setIsLoading(true);
 
         try {
-            const API_URL = import.meta.env.BASE_URL;
-
-            const response = await axios.post(`http://localhost:9000/api/v1/auth/login`, {
+            const response = await axios.post(`${API_URL}` + "/auth/login", {
                 username: username,
                 password: password,
             });
@@ -33,29 +33,30 @@ const Login: React.FC<LoginFormProps> = ({setIsAuthenticated}) => {
             localStorage.setItem('token', token);
 
             setIsAuthenticated(true);
+
+            try {
+                const token = localStorage.getItem('token');
+
+                const response = await axios.get(`${API_URL}` + "/user/find", {
+                    headers: {'Authorization': `Bearer ${token}`},
+                    params: {username: username},
+                });
+
+                const user: User = response.data;
+                localStorage.setItem('user', JSON.stringify(user));
+
+                navigate('/');
+            } catch (error: any) {
+                console.error('Error fetching user: ', error.message);
+                setShow(true);
+                setError('Error fetching user: ' + `${error.message}`);
+            } finally {
+                setIsLoading(false);
+            }
         } catch (error: any) {
             console.error('Error logging in: ', error.message);
-            setError(error.message);
-        } finally {
-            setIsLoading(false);
-        }
-
-        try {
-            const API_URL = import.meta.env.BASE_URL;
-            const token = localStorage.getItem('token');
-
-            const response = await axios.get(`${API_URL}/user`, {
-                headers: {'Authorization': `Bearer ${token}`},
-                params: {username: username},
-            });
-
-            const user: User = response.data;
-            localStorage.setItem('user', JSON.stringify(user));
-
-            navigate('/');
-        } catch (error: any) {
-            console.error('Error fetching user: ', error.message);
-            setError(error.message);
+            setShow(true);
+            setError('Error logging in: ' + `${error.message}`);
         } finally {
             setIsLoading(false);
         }
@@ -74,6 +75,7 @@ const Login: React.FC<LoginFormProps> = ({setIsAuthenticated}) => {
                             <Form.Control
                                 type="text"
                                 placeholder="Enter username"
+                                required
                                 value={username}
                                 onChange={(event) => setUsername(event.target.value)}
                             />
@@ -83,6 +85,7 @@ const Login: React.FC<LoginFormProps> = ({setIsAuthenticated}) => {
                             <Form.Control
                                 type="password"
                                 placeholder="Password"
+                                required
                                 value={password}
                                 onChange={(event) => setPassword(event.target.value)}
                             />
@@ -99,7 +102,11 @@ const Login: React.FC<LoginFormProps> = ({setIsAuthenticated}) => {
                                 width: '25%', textOverflow: 'ellipsis', overflow: 'hidden'
                             }} onClick={onShowRegistration}>Register here</Button>
                         </div>*/}
-                        {error && <div className="alert alert-danger">{error}</div>}
+                        {error && show &&
+                            <Alert variant="danger" className="mb-0 mt-3 pb-0" onClose={() => setShow(false)}
+                                   dismissible>
+                                <p>{error}</p>
+                            </Alert>}
                     </Form>
                 </div>
             </div>

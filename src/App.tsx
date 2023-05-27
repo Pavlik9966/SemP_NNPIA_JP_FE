@@ -3,15 +3,18 @@ import React, {useEffect, useState} from 'react';
 import Login from './pages/login/Login';
 import Home from './pages/home/Home';
 import Navigation from "./components/Navigation";
-import {Provider} from "react-redux";
-import {store} from "./features/store";
+import {User} from "./data/api/types";
+import Transactions from "./pages/transactions/Transactions";
 
 const App = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [user, setUser] = useState<User>();
 
     useEffect(() => {
         const expiration = localStorage.getItem('expiration');
         const token = localStorage.getItem('token');
+
+        setUser(JSON.parse(localStorage.getItem('user')!!));
 
         if (token && expiration) {
             const currentTime = new Date().getTime();
@@ -36,32 +39,41 @@ const App = () => {
     }, []);
 
     return (
-        <Provider store={store}>
-            <BrowserRouter>
-                <Navigation setIsAuthenticated={setIsAuthenticated}/>
-                <Routes>
+        <BrowserRouter>
+            <Navigation setIsAuthenticated={setIsAuthenticated}/>
+            <Routes>
+                <Route
+                    path={"/"}
+                    element={isAuthenticated ?
+                        (user && (<Home user={user}/>)) :
+                        (<Navigate to="/login" replace/>)}
+                />
+                <Route
+                    path={"/login"}
+                    element={isAuthenticated ?
+                        (<Navigate to="/" replace/>) :
+                        (<Login setIsAuthenticated={setIsAuthenticated}/>)}
+                />
+                <Route path={"/transactions/*"}>
                     <Route
-                        path={"/"}
+                        path=":selected"
                         element={isAuthenticated ?
-                            (<Home user={JSON.parse(localStorage.getItem('user')!!)}/>) :
+                            (<Transactions/>) :
                             (<Navigate to="/login" replace/>)}
                     />
-                    <Route
-                        path={"/login"}
-                        element={isAuthenticated ? (<Navigate to="/" replace/>) : (
-                            <Login setIsAuthenticated={setIsAuthenticated}/>)}
-                    />
-                    <Route
-                        path={"*"}
-                        element={<Navigate to="/" replace/>}
-                    />
-                    {/*<Route
+                </Route>
+                {/*<Route
                         path={"/register"}
-                        element={<Registration/>}
+                        element={isAuthenticated ?
+                            (<Navigate to="/" replace/>) :
+                            (<Registration/>)}
                     />*/}
-                </Routes>
-            </BrowserRouter>
-        </Provider>
+                <Route
+                    path={"*"}
+                    element={<Navigate to="/" replace/>}
+                />
+            </Routes>
+        </BrowserRouter>
     );
 };
 

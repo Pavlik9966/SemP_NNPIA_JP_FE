@@ -1,7 +1,8 @@
 import React, {useEffect, useState} from 'react';
-import {Card, Container, Table} from "react-bootstrap";
+import {Alert, Card, Container, Table} from "react-bootstrap";
 import {Account, User} from "../../data/api/types";
 import axios from "axios";
+import {useNavigate} from "react-router-dom";
 
 interface HomeProps {
     user: User;
@@ -9,9 +10,11 @@ interface HomeProps {
 
 const Home: React.FC<HomeProps> = ({user}) => {
     const [accounts, setAccounts] = useState<Account[]>([]);
-    const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
+    const API_URL = 'http://localhost:9000/api/v1';
+    const navigate = useNavigate();
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(true);
+    const [show, setShow] = useState(true);
 
     useEffect(() => {
         setError('');
@@ -19,18 +22,20 @@ const Home: React.FC<HomeProps> = ({user}) => {
 
         const fetchUserAccounts = async () => {
             try {
-                const API_URL = import.meta.env.BASE_URL;
-                const token = localStorage.getItem('token');
+                if (user) {
+                    const token = localStorage.getItem('token');
 
-                const response = await axios.get(`${API_URL}/accounts`, {
-                    headers: {'Authorization': `Bearer ${token}`},
-                    params: {userId: user.id},
-                });
+                    const response = await axios.get(`${API_URL}` + "/user/accounts", {
+                        headers: {'Authorization': `Bearer ${token}`},
+                        params: {userId: user.id},
+                    });
 
-                setAccounts(response.data);
+                    setAccounts(response?.data);
+                }
             } catch (error: any) {
                 console.error('Error fetching user\'s accounts: ', error.message);
-                setError(error.message);
+                setShow(true);
+                setError('Error fetching user\'s accounts: ' + `${error.message}`);
             } finally {
                 setIsLoading(false);
             }
@@ -39,24 +44,14 @@ const Home: React.FC<HomeProps> = ({user}) => {
         fetchUserAccounts();
     }, []);
 
-    /*const handleAccountClick = (account: Account) => {
-        setSelectedAccount(account);
-
-        // fetch transactions for selected account
-        fetch(`/api/accounts/${account.id}/transactions`, {
-            headers: {
-                "Authorization": `Bearer ${localStorage.getItem("token")}`
-            }
-        })
-            .then(response => response.json())
-            .then(data => setTransactions(data))
-            .catch(error => console.error(error));
-    };*/
+    const handleAccountClick = (selected: Account) => {
+        navigate(`/transactions/${selected.id}`);
+    };
 
     return (
         <div>
             <Container className="mt-3">
-                {user && (
+                {accounts && (
                     <Card>
                         <Card.Body>
                             <Card.Title>User information</Card.Title>
@@ -76,7 +71,7 @@ const Home: React.FC<HomeProps> = ({user}) => {
                                 </tr>
                                 <tr>
                                     <td>Date of Birth:</td>
-                                    <td>{new Date(user.dateOfBirth).toISOString()}</td>
+                                    <td>{new Date(user.dateOfBirth).toLocaleDateString()}</td>
                                 </tr>
                                 <tr>
                                     <td>Phone:</td>
@@ -110,22 +105,35 @@ const Home: React.FC<HomeProps> = ({user}) => {
                                 <tr>
                                     <th>Account Number</th>
                                     <th>Balance</th>
+                                    <th>Created</th>
+                                    <th></th>
                                 </tr>
                                 </thead>
                                 <tbody>
-                                {/*{accounts.map(account => (
-                                    <tr key={account.id} onClick={() => handleAccountClick(account)}>
+                                {accounts.map(account => (
+                                    <tr key={account.id}>
                                         <td>{account.accountNumber}</td>
-                                        <td>{account.balance}</td>
+                                        <td>{account.balance} CZK</td>
+                                        <td>{new Date(account.createdAt).toLocaleString()}</td>
+                                        <td className="text-center" onClick={() => handleAccountClick(account)}>
+                                            <img
+                                                src="data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='16' fill='currentColor' class='bi bi-arrow-right' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z'/%3E%3C/svg%3E"
+                                                alt="arrow"
+                                            />
+                                        </td>
                                     </tr>
-                                ))}*/}
+                                ))}
                                 </tbody>
                             </Table>
                         </Card.Body>
                     </Card>
                 )}
                 {isLoading && <p>Loading...</p>}
-                {error && <div className="alert alert-danger">{error}</div>}
+                {error && show &&
+                    <Alert variant="danger" className="mb-0 mt-3 pb-0" onClose={() => setShow(false)}
+                           dismissible>
+                        <p>{error}</p>
+                    </Alert>}
             </Container>
         </div>
     );
