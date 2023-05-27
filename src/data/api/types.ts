@@ -1,44 +1,74 @@
 export interface User {
     id: number;
     username: string;
-    password: string;
     name: string;
     surname: string;
-    dateOfBirth: Date; // Note: use string or number depending on how you serialize date in your application.
+    dateOfBirth: Date;
     phone: string;
     email: string;
     address: Address;
-    createdAt: string; // Note: use string or number depending on how you serialize date in your application.
-    roles: Role[];
+    createdAt: Date;
 }
 
 export interface State {
-    id: number;
     name: string;
     shortcut: string;
 }
 
 export interface Address {
-    id: number;
     streetAddress: string;
     city: string;
     zipCode: string;
     state: State;
 }
 
-export interface Role {
-    id: number;
-    name: string;
-    users: User[];
-}
-
 export interface Account {
     id: number;
-    user: User;
     accountNumber: string;
     balance: number;
     createdAt: Date;
 }
 
+export interface TransactionUser {
+    name: string;
+    surname: string;
+}
+
 export interface Transaction {
+    user: TransactionUser;
+    accountNumberRecipient: string;
+    accountNumberSender: string;
+    transactionDate: Date;
+    amount: number;
+    createdAt: Date;
+    description: string;
+}
+
+export interface NewTransaction {
+    senderId: number;
+    accountNumberRecipient: string;
+    accountIdSender: number;
+    transactionDate: Date;
+    amount: number;
+    createdAt: Date;
+    description: string;
+}
+
+export interface NewAddress {
+    streetAddress: string;
+    city: string;
+    zipCode: string;
+    state: string;
+}
+
+export interface NewUser {
+    username: string;
+    password: string;
+    name: string;
+    surname: string;
+    dateOfBirth: Date;
+    phone: string;
+    email: string;
+    address: NewAddress;
+    createdAt: Date;
 }

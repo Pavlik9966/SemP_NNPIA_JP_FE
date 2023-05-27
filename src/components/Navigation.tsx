@@ -34,20 +34,9 @@ const Navigation: React.FC<NavigationProps> = ({setIsAuthenticated}) => {
                 <Navbar.Toggle aria-controls="responsive-navbar-nav"/>
                 <Navbar.Collapse id="responsive-navbar-nav">
                     <Nav className="me-auto">
-                        <Nav.Link as={Link} to="/">Link 1</Nav.Link>
-                        {/*<Nav.Link as={Link} to="/">Link 2</Nav.Link>
-                        <NavDropdown title="Dropdown" id="collasible-nav-dropdown">
-                            <NavDropdown.Item href="#action/3.1">Action 1</NavDropdown.Item>
-                            <NavDropdown.Item href="#action/3.2">Action 2</NavDropdown.Item>
-                            <NavDropdown.Item href="#action/3.3">Action 3</NavDropdown.Item>
-                            <NavDropdown.Divider/>
-                            <NavDropdown.Item href="#action/3.4">Action 4</NavDropdown.Item>
-                        </NavDropdown>*/}
                     </Nav>
                     <Nav>
                         <Button variant="outline-primary" onClick={handleLogout}>Logout</Button>
-                        {/*<Nav.Link href="#deets">Logout</Nav.Link>*/}
-                        {/*<Nav.Link eventKey={2} href="#memes">Dank memes</Nav.Link>*/}
                     </Nav>
                 </Navbar.Collapse>
             </Container>
