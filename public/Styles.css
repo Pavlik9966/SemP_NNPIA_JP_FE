@@ -32,3 +32,13 @@
         font-size: 20px;
     }
 }
+
+.fixed-table {
+    table-layout: fixed;
+}
+
+.ellipses th, .ellipses td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
