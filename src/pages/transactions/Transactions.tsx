@@ -119,7 +119,7 @@ const Transactions: React.FC<TransactionsProps> = ({}) => {
 
             transactionData.senderId = user.id;
             transactionData.accountIdSender = parseInt(selected!!);
-            transactionData.createdAt = new Date(new Date().toLocaleString());
+            transactionData.createdAt = new Date();
 
             const token = localStorage.getItem('token');
 
